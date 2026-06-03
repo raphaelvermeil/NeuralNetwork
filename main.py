@@ -3,20 +3,20 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-# data = np.array(data)
-# m, n = data.shape
-# np.random.shuffle(data)
+data = np.array(data)
+m, n = data.shape
+np.random.shuffle(data)
 
-# data_dev = data[0:1000].T
-# Y_dev = data_dev[0]
-# X_dev = data_dev[1:n]
-# X_dev = X_dev / 255.
+data_dev = data[0:1000].T
+Y_dev = data_dev[0]
+X_dev = data_dev[1:n]
+X_dev = X_dev / 255.
 
-# data_train = data[1000:m].T
-# Y_train = data_train[0]
-# X_train = data_train[1:n]
-# X_train = X_train / 255.
-# _,m_train = X_train.shape
+data_train = data[1000:m].T
+Y_train = data_train[0]
+X_train = data_train[1:n]
+X_train = X_train / 255.
+_,m_train = X_train.shape
 
 
 input_layer_size = 784
@@ -43,10 +43,7 @@ def init_params():
     array_of_weights_matrices[-1] = np.random.rand(output_layer_size, size_of_hidden_layers[-1]) - 0.5
     array_of_biases_matrices[-1] = np.random.rand(output_layer_size, 1) - 0.5
 
-    # W1 = np.random.rand(10, 784) - 0.5
-    # b1= np.random.rand(10, 1) - 0.5
-    # W2 = np.random.rand(10, 10) - 0.5
-    # b2 = np.random.rand(10, 1) - 0.5
+ 
     return array_of_weights_matrices, array_of_biases_matrices
 
 def ReLU(Z):
@@ -57,101 +54,125 @@ def softmax(Z):
     return A
 
 def forward_prop(array_of_weights_matrices, array_of_biases_matrices, X):
-
+    #Declation
     array_of_Z_matrices = [np.ndarray] * (number_of_hidden_layers + 1)
-
     array_of_activated_matrices = [np.ndarray] * (number_of_hidden_layers + 1)
 
+    #First Hidden Layer
     array_of_Z_matrices[0] = array_of_weights_matrices[0].dot(X) + array_of_biases_matrices[0]
     array_of_activated_matrices[0] = ReLU(array_of_Z_matrices[0])
 
+    #Hidden Layers
     for i in range(1, number_of_hidden_layers):
         array_of_Z_matrices[i] = array_of_weights_matrices[i].dot(array_of_activated_matrices[i - 1]) + array_of_biases_matrices[i]
         array_of_activated_matrices[i] = ReLU(array_of_Z_matrices[i])
 
+
+    #Output Layer
     array_of_Z_matrices[-1] = array_of_weights_matrices[-1].dot(array_of_activated_matrices[-2]) + array_of_biases_matrices[-1]
     array_of_activated_matrices[-1] = softmax(array_of_Z_matrices[-1])
- 
-    # Z1 = W1.dot(X) + b1
-    # A1 = ReLU(Z1)
-    # Z2 = W2.dot(A1) + b2
-    # A2 = ReLU(Z2)
-    # Z3 = W3.dot(A2) + b3
-    # A3 = softmax(Z3)
 
 
     return array_of_Z_matrices, array_of_activated_matrices
 
 
-# def one_hot(Y):
-#     one_hot_Y = np.zeros((Y.size, Y.max() + 1))
-#     one_hot_Y[np.arange(Y.size), Y] = 1
-#     one_hot_Y = one_hot_Y.T
-#     return one_hot_Y
+def one_hot(Y):
+    one_hot_Y = np.zeros((Y.size, Y.max() + 1))
+    one_hot_Y[np.arange(Y.size), Y] = 1
+    one_hot_Y = one_hot_Y.T
+    return one_hot_Y
 
-# def deriv_ReLU(Z):
-#     return Z > 0
+def deriv_ReLU(Z):
+    return Z > 0
 
-# def back_prop(W1, W2, Z1, Z2, A1, A2, Y, X):
-#     one_hot_Y = one_hot(Y)
-#     dZ2 = A2 - one_hot_Y
-#     dW2 = (1/m) * dZ2.dot(A1.T)
-#     dB2 = (1/m) * np.sum(dZ2)
-#     dZ1 = W2.T.dot(dZ2) * deriv_ReLU(Z1)
-#     dW1 = (1/m) * dZ1.dot(X.T)
-#     dB1 = (1/m) * np.sum(dZ1)
-#     return dZ1, dZ2, dW1, dW2, dB1, dB2
+def back_prop(array_of_weights_matrices, array_of_Z_matrices, array_of_activated_matrices, Y, X):
 
-# def update_params(W1, b1, W2, b2, dW1, db1, dW2, db2, alpha):
-#     W2 = W2 - alpha * dW2
-#     W1 = W1 - alpha * dW1
-#     b1 = b1 - alpha * db1
-#     b2 = b2 - alpha * db2
-#     return W1, W2, b1, b2
+    #Declarations
+    one_hot_Y = one_hot(Y)
+    m = Y.size
+    array_of_error_Z_matrices = [np.ndarray] * (number_of_hidden_layers + 1)
+    array_of_error_weight_matrices = [np.ndarray] * (number_of_hidden_layers + 1)
+    array_of_error_bias_matrices = [np.ndarray] * (number_of_hidden_layers + 1)
 
-# def get_predictions(A2):
-#     return np.argmax(A2, 0)
+    #Output Layer
+    array_of_error_Z_matrices[-1] = array_of_activated_matrices[-1] - one_hot_Y
+    array_of_error_weight_matrices[-1] = (1/m) * array_of_error_Z_matrices[-1].dot(array_of_activated_matrices[-2].T)
+    array_of_error_bias_matrices[-1] = (1/m) * np.sum(array_of_error_Z_matrices[-1])
 
-# def get_accuracy(predictions, Y):
-#     print(predictions, Y)
-#     return np.sum(predictions == Y) / Y.size
+    #Hidden Layers
+    for i in range(-2, -(number_of_hidden_layers + 1), -1):
+        array_of_error_Z_matrices[i] = array_of_weights_matrices[i + 1].T.dot(array_of_error_Z_matrices[i + 1]) * deriv_ReLU(array_of_Z_matrices[i])
+        array_of_error_weight_matrices[i] = (1/m) * array_of_error_Z_matrices[i].dot(array_of_activated_matrices[i - 1].T)
+        array_of_error_bias_matrices[i] = (1/m) * np.sum(array_of_error_Z_matrices[i])
 
-# def gradient_descent(X, Y, alpha, iterations):
-#     W1, b1, W2, b2 = init_params()
-#     for i in range(0, iterations):
-#         Z1, Z2, A1, A2 = forward_prop(W1, W2, b1, b2, X)
-#         dZ1, dZ2, dW1, dW2, db1, db2 = back_prop(W1, W2, Z1, Z2, A1, A2, Y, X)
-#         W1, W2, b1, b2 = update_params(W1, b1, W2, b2, dW1, db1, dW2, db2, alpha)
-#         if i % 10 == 0:
-#             print("Iteration: ", i)
-#             predictions = get_predictions(A2)
-#             print(get_accuracy(predictions, Y))
-#     return W1, b1, W2, b2
+    #First Hidden Layer
+    array_of_error_Z_matrices[0] = array_of_weights_matrices[1].T.dot(array_of_error_Z_matrices[1]) * deriv_ReLU(array_of_Z_matrices[0])
+    array_of_error_weight_matrices[0] = (1/m) * array_of_error_Z_matrices[0].dot(X.T)
+    array_of_error_bias_matrices[0] = (1/m) * np.sum(array_of_error_Z_matrices[0])
+
+
+    return array_of_error_Z_matrices, array_of_error_weight_matrices, array_of_error_bias_matrices
+
+
+#Subtract the error from the original value
+def update_params(array_of_weights_matrices, array_of_biases_matrices, array_of_error_weight_matrices, array_of_error_bias_matrices, alpha):
+
+    for i in range(0, number_of_hidden_layers + 1):
+        array_of_weights_matrices[i] = array_of_weights_matrices[i] - alpha * array_of_error_weight_matrices[i]
+        array_of_biases_matrices[i] = array_of_biases_matrices[i] - alpha * array_of_error_bias_matrices[i]
+
+    return array_of_weights_matrices, array_of_biases_matrices
+
+
+def get_predictions(A2):
+    return np.argmax(A2, 0)
+
+
+def get_accuracy(predictions, Y):
+    print(predictions, Y)
+    return np.sum(predictions == Y) / Y.size
+
+
+
+""" Takes the following inputs:
+X is matrix of the train data -> Each column is a data point. For example if training on images, 1 column is 1 image, # rows for # of pixels
+Y is labels of training data -> 1 row with each column being a data point. If images, then # columns is # of pixels
+Alpha is learn rate
+Iterations is... well iterations, what can I say. Hakuna Matata
+"""
+def gradient_descent(X, Y, alpha, iterations):
+    array_of_weights_matrices, array_of_biases_matrices = init_params()
+    for i in range(0, iterations):
+        array_of_Z_matrices, array_of_activated_matrices = forward_prop(array_of_weights_matrices, array_of_biases_matrices, X)
+        array_of_error_Z_matrices, array_of_error_weight_matrices, array_of_error_bias_matrices = back_prop(array_of_weights_matrices, array_of_Z_matrices, array_of_activated_matrices, Y, X)
+        array_of_weights_matrices, array_of_biases_matrices = update_params(array_of_weights_matrices, array_of_biases_matrices, array_of_error_weight_matrices, array_of_error_bias_matrices, alpha)
+        if i % 10 == 0:
+            print("Iteration: ", i)
+            predictions = get_predictions(array_of_activated_matrices[-1])
+            print(get_accuracy(predictions, Y))
+    return array_of_weights_matrices, array_of_biases_matrices
     
 
 
-# W1, b1, W2, b2 = gradient_descent(X_train, Y_train, 0.10, 500)
+array_of_weights_matrices, array_of_biases_matrices = gradient_descent(X_train, Y_train, 0.10, 500)
 
 
 
-# def make_predictions(X, W1, b1, W2, b2):
-#     _, _, _, A2 = forward_prop(W1, W2, b1, b2, X)
-#     predictions = get_predictions(A2)
-#     return predictions
+def make_predictions(X, array_of_weights_matrices, array_of_biases_matrices):
+    array_of_Z_matrices, array_of_activated_matrices = forward_prop(array_of_weights_matrices, array_of_biases_matrices, X)
+    predictions = get_predictions(array_of_activated_matrices[-1])
+    return predictions
 
-# def test_prediction(index, W1, b1, W2, b2):
-#     current_image = X_train[:, index, None]
-#     prediction = make_predictions(X_train[:, index, None], W1, b1, W2, b2)
-#     label = Y_train[index]
-#     print("Prediction: ", prediction)
-#     print("Label: ", label)
+def test_prediction(index, array_of_weights_matrices, array_of_biases_matrices):
+    current_image = X_train[:, index, None]
+    prediction = make_predictions(X_train[:, index, None], array_of_weights_matrices, array_of_biases_matrices)
+    label = Y_train[index]
+    print("Prediction: ", prediction)
+    print("Label: ", label)
     
-#     current_image = current_image.reshape((28, 28)) * 255
-#     plt.gray()
-#     plt.imshow(current_image, interpolation='nearest')
-#     plt.show()
+    current_image = current_image.reshape((28, 28)) * 255
+    plt.gray()
+    plt.imshow(current_image, interpolation='nearest')
+    plt.show()
 
 
-
-array_of_weights_matrices, array_of_biases_matrices = init_params()
-forward_prop(array_of_weights_matrices, array_of_biases_matrices, X)
