@@ -49,19 +49,38 @@ def init_params():
     # b2 = np.random.rand(10, 1) - 0.5
     return array_of_weights_matrices, array_of_biases_matrices
 
-# def ReLU(Z):
-#     return np.maximum(Z, 0)
+def ReLU(Z):
+    return np.maximum(Z, 0)
 
-# def softmax(Z):
-#     A = np.exp(Z) / sum(np.exp(Z))
-#     return A
+def softmax(Z):
+    A = np.exp(Z) / sum(np.exp(Z))
+    return A
 
-# def forward_prop(W1, W2, b1, b2, X):
-#     Z1 = W1.dot(X) + b1
-#     A1 = ReLU(Z1)
-#     Z2 = W2.dot(A1) + b2
-#     A2 = softmax(Z2)
-#     return Z1, Z2, A1, A2
+def forward_prop(array_of_weights_matrices, array_of_biases_matrices, X):
+
+    array_of_Z_matrices = [np.ndarray] * (number_of_hidden_layers + 1)
+
+    array_of_activated_matrices = [np.ndarray] * (number_of_hidden_layers + 1)
+
+    array_of_Z_matrices[0] = array_of_weights_matrices[0].dot(X) + array_of_biases_matrices[0]
+    array_of_activated_matrices[0] = ReLU(array_of_Z_matrices[0])
+
+    for i in range(1, number_of_hidden_layers):
+        array_of_Z_matrices[i] = array_of_weights_matrices[i].dot(array_of_activated_matrices[i - 1]) + array_of_biases_matrices[i]
+        array_of_activated_matrices[i] = ReLU(array_of_Z_matrices[i])
+
+    array_of_Z_matrices[-1] = array_of_weights_matrices[-1].dot(array_of_activated_matrices[-2]) + array_of_biases_matrices[-1]
+    array_of_activated_matrices[-1] = softmax(array_of_Z_matrices[-1])
+ 
+    # Z1 = W1.dot(X) + b1
+    # A1 = ReLU(Z1)
+    # Z2 = W2.dot(A1) + b2
+    # A2 = ReLU(Z2)
+    # Z3 = W3.dot(A2) + b3
+    # A3 = softmax(Z3)
+
+
+    return array_of_Z_matrices, array_of_activated_matrices
 
 
 # def one_hot(Y):
@@ -134,4 +153,5 @@ def init_params():
 
 
 
-init_params()
+array_of_weights_matrices, array_of_biases_matrices = init_params()
+forward_prop(array_of_weights_matrices, array_of_biases_matrices, X)
